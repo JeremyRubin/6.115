@@ -15,6 +15,7 @@ init:
     mov tcon, #40h  ; run timer 1
     mov th1,  #253        ; set 9600 baud with xtal=11.059mhz
     mov scon, #54h  ; set serial control reg for 
+    ret
 getchr:
     jnb ri, getchr
     mov a, sbuf
