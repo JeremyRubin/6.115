@@ -27,17 +27,26 @@ start:
             sjmp loop
 result:
   mov P1, acc      ; put the acc on the led
-  mov b, #10
-  div ab
-  push b
-  mov b, #10
-  div ab
-  push b
-  lcall sndchr
-  pop acc
-  lcall sndchr
-  pop acc
-  lcall sndchr
+
+  mov b, #10   ; Move down a decimal place
+  div ab       ; perform the move
+  push b       ; store remainder
+
+  mov b, #10   ; move down a decimal place
+  div ab       ; perform move
+  push b       ; store remainder
+  
+  orl a, #30h
+  lcall sndchr ; Put out the highest digit
+
+  pop acc      ; get the second highest digit
+  orl a, #30h
+  lcall sndchr ; ouput it
+
+  pop acc      ; get the last digit
+  orl a, #30h
+  lcall sndchr ; output it
+
   ret
   
 ;;Gets the operator from the client
