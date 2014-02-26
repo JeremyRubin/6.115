@@ -1,32 +1,51 @@
-first equ 9000h
-second equ 9001h
-sum equ 9002h
-dif equ 9003h
-prh equ 9004h
-prl equ 9005h
-qot equ 9006h
-rem equ 9007h
+.equ first,  9000h
+.equ second, 9001h
+.equ sum,    9002h
+.equ dif,    9003h
+.equ prh,    9004h
+.equ prl,    9005h
+.equ qot,    9006h
+.equ rem,    9007h
 .org 8000h
 sumtogether:
-    mov a, first
-    add a, second
-    mov sum, a
+	mov dptr, #first
+    movx a, @dptr
+	mov b, a
+	mov dptr, #second
+	movx a, @dptr
+	push acc
+	push b
+	push acc
+	push b
+	push acc
+	push b
+    add a, b
+	mov dptr, #sum
+    movx @dptr, a
 subtract:
-    mov a, first
-    subb a, second
-    mov dif, a
+	pop acc
+	pop b
+    subb a, b
+	mov dptr, #dif
+    movx @dptr, a
 multiply:
-    mov a, first
-    mov b, second
+	pop acc
+	pop b
     mul ab
-    mov prh, a
-    mov prl, b
+	mov dptr, #prh
+    movx @dptr, a
+	mov dptr, #prl
+	xch a, b
+    movx @dptr, a
 divide:
-    mov a, first
-    mov b, second
+	pop acc
+	pop b
     div ab
-    mov qot, a
-    mov rem, b
+	mov dptr, #qot
+    movx @dptr, a
+	mov dptr, #rem
+	xch a, b
+    movx @dptr, a
 
 loop:
   sjmp loop
