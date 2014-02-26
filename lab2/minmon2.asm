@@ -125,16 +125,19 @@ wrtcmd:
    lcall getbyt           ; get address low byte
    mov dpl, a            ; save low byte in dpl
    lcall prthex
-   lcall crlf
 
    lcall getchr
    lcall sndchr
-   cjne a, '=', badpar   ; If it is not an equal sign, restart
+   cjne a, #61, noteq   ; If it is not an equal sign, restart
 
    lcall getbyt
-
-   mov @dptr, a
+   lcall prthex
+   movx @dptr, a
    ret                    ; do jump by doing a ret
+   noteq:
+   lcall print
+   .db 0dh, 0ah,"Expected Equals", 0h
+   ljmp endloop
 ;===============================================================
 ; command redcmd  'r'
 ; this routine reads a byte from a 16 bit address
@@ -148,9 +151,9 @@ redcmd:
    lcall prthex
    lcall crlf
 
-   mov a, @dptr         ; Get the item in memory
+   movx a, @dptr         ; Get the item in memory
 
-   lcall prthx         ; Print it out (in hex)
+   lcall prthex         ; Print it out (in hex)
    ret                    ; do jump by doing a ret
 ;===============================================================
 ; command downld  'd'
