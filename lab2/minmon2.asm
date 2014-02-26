@@ -133,7 +133,7 @@ wrtcmd:
    lcall getbyt
    lcall prthex
    movx @dptr, a
-   ret                    ; do jump by doing a ret
+   ljmp endloop                    ; do jump by doing a ret
    noteq:
    lcall print
    .db 0dh, 0ah,"Expected Equals", 0h
@@ -154,7 +154,7 @@ redcmd:
    movx a, @dptr         ; Get the item in memory
 
    lcall prthex         ; Print it out (in hex)
-   ret                    ; do jump by doing a ret
+   ljmp endloop         ; do jump by doing a ret
 ;===============================================================
 ; command downld  'd'
 ; this command reads in an Intel hex file from the serial port
