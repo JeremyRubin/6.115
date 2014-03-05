@@ -88,7 +88,7 @@ jumtab:
    .dw badcmd             ; command 'q' 11
    .dw redcmd             ; command 'r' 12 used
    .dw badcmd             ; command 's' 13
-   .dw badcmd             ; command 't' 14
+   .dw twrcmd             ; command 't' 14
    .dw badcmd             ; command 'u' 15
    .dw badcmd             ; command 'v' 16
    .dw wrtcmd             ; command 'w' 17 used
@@ -138,6 +138,52 @@ wrtcmd:
    lcall print
    .db 0dh, 0ah,"Expected Equals", 0h
    ljmp endloop
+;===============================================================
+; command twrcmd  'w'
+; this routine writes a 256 byte table starting at an 8 bit address in MSB
+; goes until the user presses enter/enters 256 bytes
+; ie,
+; MINMON>
+; *T94
+; 9400 01
+; 9401 02
+; 9402 FF
+;===============================================================
+twrcmd:
+   lcall getbyt          ; get address high byte
+   lcall prthex
+   mov   dph, a          ; save in dph
+   clr dpl               ; start dpl at 0
+   tblwr:
+
+       mov a, #10       ; newline
+       lcall sndchr
+       mov a, #13       ; carriage return
+       lcall sndchr
+
+       mov a, dph
+       lcall prthex      ; print out the MSB
+
+       mov a, dpl
+       lcall prthex      ; Print out the LSB
+
+       mov a, #61
+       lcall sndchr      ; Print out equals
+
+       lcall getbyt      ; Get data to store
+       lcall prthex
+
+       movx @dptr, a     ; Store data
+
+       mov a, dpl
+       add a, #01           ; increment dpl
+
+       jnc tblwr         ; if not overflowed
+       clr c
+   ljmp endloop
+
+
+
 ;===============================================================
 ; command redcmd  'r'
 ; this routine reads a byte from a 16 bit address
