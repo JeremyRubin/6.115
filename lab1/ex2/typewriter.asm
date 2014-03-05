@@ -1,3 +1,4 @@
+;;; EX2
 ;;; Simple typewrited program to "echo" text input from serial
 .org 00h             ; power up and reset vector
     mov P1, #00h

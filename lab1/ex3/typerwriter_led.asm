@@ -1,3 +1,6 @@
+;;; EX3
+;;; bullet point 1 
+;;; Output key press on LED bank
 .org 00h             ; power up and reset vector
     mov P1, #00h
     ljmp start       ; when the micro wakes up, jump to the beginning of

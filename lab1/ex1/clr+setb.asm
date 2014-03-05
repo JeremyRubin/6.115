@@ -1,3 +1,5 @@
+;;; EX1
+;;; Bullet number 3
 ;;; Set only the msb, set the lsb, then clear the msb
 .org 8000h
     mov P1, #80h

@@ -1,3 +1,5 @@
+;;; EX5
+;;; Calculator with ascii numeric return
 .org 00h             ; power up and reset vector
     ljmp start       ; when the micro wakes up, jump to the beginning of
                      ; the main body or loop in the program called start
@@ -35,28 +37,27 @@ result:
   mov b, #10   ; move down a decimal place
   div ab       ; perform move
   push b       ; store remainder
-  
-  orl a, #30h
+
+  orl a, #30h  ; convert to ascii
   lcall sndchr ; Put out the highest digit
 
   pop acc      ; get the second highest digit
-  orl a, #30h
+  orl a, #30h  ; convert to ascii
   lcall sndchr ; ouput it
 
   pop acc      ; get the last digit
-  orl a, #30h
+  orl a, #30h  ; convert to ascii
   lcall sndchr ; output it
-
   ret
   
 ;;Gets the operator from the client
 op:
-    lcall getchr ;
-    lcall sndchr ;
-    mov P1, acc;
-    xch a, r5
-    lcall newline
-    xch a, r5
+    lcall getchr
+    lcall sndchr
+    mov P1, acc   ; put the acc on the port
+    xch a, r5     ; swap the acc into r5
+    lcall newline ; send newline
+    xch a, r5     ; swap back
     ret
 ;; Send a new line (CAREFUL IT CLEARS ACC)
 newline:

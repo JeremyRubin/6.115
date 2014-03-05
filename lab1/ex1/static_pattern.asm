@@ -1,3 +1,6 @@
+;;; EX1
+;;; Bullet number 4
+
 ;;; Try to set a fun pattern
 .org 8000h
     mov P1, #10101010b ; Set an alternating pattern with binary

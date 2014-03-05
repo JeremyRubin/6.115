@@ -1,3 +1,6 @@
+;;; EX4
+;;; Bullet point 1
+;;; Calculator which can add/subtract 2 3 digit decimal numbers
 .org 00h             ; power up and reset vector
     ljmp start       ; when the micro wakes up, jump to the beginning of
                      ; the main body or loop in the program called start
@@ -20,7 +23,7 @@ start:
         xch a, r7                ; swap the operator and second number
         xch a, 050h              ; swap the second and first number
         cjne r7, #2dh, addnum    ; jump if symbol not minus sign
-            subb a, 050h
+            subb a, 050h         ; Subtract first - second
             sjmp loop
         addnum:
             add a, 050h        ;  add first and second numbers
@@ -28,12 +31,12 @@ start:
 
 ;;Gets the operator from the client
 op:
-    lcall getchr ;
-    lcall sndchr ;
+    lcall getchr
+    lcall sndchr
     mov P1, acc;
-    xch a, r5
+    xch a, r5      ; store the acc result before newlining
     lcall newline
-    xch a, r5
+    xch a, r5      ; put the result back into acc
     ret
 ;; Send a new line (CAREFUL IT CLEARS ACC)
 newline:

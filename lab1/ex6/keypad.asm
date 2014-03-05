@@ -1,18 +1,21 @@
+;;; EX 6
+;;; Bullet 1
+;;; Read data from keypad
 .org 0000h
 lcall init
 ljmp start
 
 .org 100h
 start:
-clr P3.2   ; enable the chip
-setb p3.3  ; enable 3.3 as input
-mov p1, #0ffh   ; enable 1 as input
-jnb P3.3, start  ; if data avail
-mov a, P1        ; read p1
-lcall sndchr
-wait:    ; wait for the data to clear
-jb p3.3, wait
-sjmp start   ; repeat
+  clr P3.2   ; enable the encoder chip
+  setb p3.3  ; enable 3.3 as input
+  mov p1, #0ffh   ; enable port 1 as input
+  jnb P3.3, start  ; proceed if data avail
+  mov a, P1        ; read p1
+  lcall sndchr
+  wait:    ; wait for the data to clear
+    jb p3.3, wait
+  sjmp start   ; repeat
 
 sndchr:
     lcall bin ; convert a into ascii
