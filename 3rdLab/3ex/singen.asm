@@ -38,38 +38,36 @@ handle_tick:
 	mov a, r7
     reti
 table:
-
-
-.db 7fh, 82h, 85h, 88h, 8bh, 8fh, 92h, 95h
-.db 98h, 9bh, 9eh, a1h, a4h, a7h, aah, adh
-.db b0h, b3h, b6h, b8h, bbh, beh, c1h, c3h
-.db c6h, c8h, cbh, cdh, d0h, d2h, d5h, d7h
-.db d9h, dbh, ddh, e0h, e2h, e4h, e5h, e7h
-.db e9h, ebh, ech, eeh, efh, f1h, f2h, f4h
-.db f5h, f6h, f7h, f8h, f9h, fah, fbh, fbh
-.db fch, fdh, fdh, feh, feh, feh, feh, feh
-.db ffh, feh, feh, feh, feh, feh, fdh, fdh
-.db fch, fbh, fbh, fah, f9h, f8h, f7h, f6h
-.db f5h, f4h, f2h, f1h, efh, eeh, ech, ebh
-.db e9h, e7h, e5h, e4h, e2h, e0h, ddh, dbh
-.db d9h, d7h, d5h, d2h, d0h, cdh, cbh, c8h
-.db c6h, c3h, c1h, beh, bbh, b8h, b6h, b3h
-.db b0h, adh, aah, a7h, a4h, a1h, 9eh, 9bh
-.db 98h, 95h, 92h, 8fh, 8bh, 88h, 85h, 82h
-.db 7fh, 7ch, 79h, 76h, 73h, 6fh, 6ch, 69h
-.db 66h, 63h, 60h, 5dh, 5ah, 57h, 54h, 51h
-.db 4eh, 4bh, 48h, 46h, 43h, 40h, 3dh, 3bh
-.db 38h, 36h, 33h, 31h, 2eh, 2ch, 29h, 27h
-.db 25h, 23h, 21h, 1eh, 1ch, 1ah, 19h, 17h
-.db 15h, 13h, 12h, 10h, fh, dh, ch, ah
-.db 9h, 8h, 7h, 6h, 5h, 4h, 3h, 3h
-.db 2h, 1h, 1h, 0h, 0h, 0h, 0h, 0h
-.db 0h, 0h, 0h, 0h, 0h, 0h, 1h, 1h
-.db 2h, 3h, 3h, 4h, 5h, 6h, 7h, 8h
-.db 9h, ah, ch, dh, fh, 10h, 12h, 13h
-.db 15h, 17h, 19h, 1ah, 1ch, 1eh, 21h, 23h
-.db 25h, 27h, 29h, 2ch, 2eh, 31h, 33h, 36h
-.db 38h, 3bh, 3dh, 40h, 43h, 46h, 48h, 4bh
-.db 4eh, 51h, 54h, 57h, 5ah, 5dh, 60h, 63h
-.db 66h, 69h, 6ch, 6fh, 73h, 76h, 79h, 7ch
+.db 07fh, 082h, 085h, 088h, 08bh, 08fh, 092h, 095h
+.db 098h, 09bh, 09eh, 0a1h, 0a4h, 0a7h, 0aah, 0adh
+.db 0b0h, 0b3h, 0b6h, 0b8h, 0bbh, 0beh, 0c1h, 0c3h
+.db 0c6h, 0c8h, 0cbh, 0cdh, 0d0h, 0d2h, 0d5h, 0d7h
+.db 0d9h, 0dbh, 0ddh, 0e0h, 0e2h, 0e4h, 0e5h, 0e7h
+.db 0e9h, 0ebh, 0ech, 0eeh, 0efh, 0f1h, 0f2h, 0f4h
+.db 0f5h, 0f6h, 0f7h, 0f8h, 0f9h, 0fah, 0fbh, 0fbh
+.db 0fch, 0fdh, 0fdh, 0feh, 0feh, 0feh, 0feh, 0feh
+.db 0ffh, 0feh, 0feh, 0feh, 0feh, 0feh, 0fdh, 0fdh
+.db 0fch, 0fbh, 0fbh, 0fah, 0f9h, 0f8h, 0f7h, 0f6h
+.db 0f5h, 0f4h, 0f2h, 0f1h, 0efh, 0eeh, 0ech, 0ebh
+.db 0e9h, 0e7h, 0e5h, 0e4h, 0e2h, 0e0h, 0ddh, 0dbh
+.db 0d9h, 0d7h, 0d5h, 0d2h, 0d0h, 0cdh, 0cbh, 0c8h
+.db 0c6h, 0c3h, 0c1h, 0beh, 0bbh, 0b8h, 0b6h, 0b3h
+.db 0b0h, 0adh, 0aah, 0a7h, 0a4h, 0a1h, 09eh, 09bh
+.db 098h, 095h, 092h, 08fh, 08bh, 088h, 085h, 082h
+.db 07fh, 07ch, 079h, 076h, 073h, 06fh, 06ch, 069h
+.db 066h, 063h, 060h, 05dh, 05ah, 057h, 054h, 051h
+.db 04eh, 04bh, 048h, 046h, 043h, 040h, 03dh, 03bh
+.db 038h, 036h, 033h, 031h, 02eh, 02ch, 029h, 027h
+.db 025h, 023h, 021h, 01eh, 01ch, 01ah, 019h, 017h
+.db 015h, 013h, 012h, 010h, 0fh, 0dh, 0ch, 0ah
+.db 09h, 08h, 07h, 06h, 05h, 04h, 03h, 03h
+.db 02h, 01h, 01h, 00h, 00h, 00h, 00h, 00h
+.db 00h, 00h, 00h, 00h, 00h, 00h, 01h, 01h
+.db 02h, 03h, 03h, 04h, 05h, 06h, 07h, 08h
+.db 09h, 0ah, 0ch, 0dh, 0fh, 010h, 012h, 013h
+.db 015h, 017h, 019h, 01ah, 01ch, 01eh, 021h, 023h
+.db 025h, 027h, 029h, 02ch, 02eh, 031h, 033h, 036h
+.db 038h, 03bh, 03dh, 040h, 043h, 046h, 048h, 04bh
+.db 04eh, 051h, 054h, 057h, 05ah, 05dh, 060h, 063h
+.db 066h, 069h, 06ch, 06fh, 073h, 076h, 079h, 07ch
 
