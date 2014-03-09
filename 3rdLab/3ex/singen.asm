@@ -1,21 +1,18 @@
-.equ device, 0fe07h
+.equ device, 0fe08h
 
-.equ amount, 1
+.equ amount, 11
 
 .org 0000h
 ljmp start
 .org 00bh
 TIMER_ISR:
-ljmp handle_tick
+	ljmp handle_tick
 .org 100h
 start:
 lcall init
 loop:
     sjmp loop
-
-
-incdptr:
-	ret
+	
 init:
 	clr c
     ; Keypad
@@ -28,14 +25,15 @@ init:
     clr tcon ; run timer 0
 	setb TR0 ; Turn timer on
     ret
+
 handle_tick:
 	mov dptr, #table
 	add a, #amount
-	mov r7, a
+	push acc
     movc a, @a+dptr
 	mov dptr, #device
     movx @dptr, a
-	mov a, r7
+	pop acc
     reti
 table:
 .db 07fh, 082h, 085h, 088h, 08bh, 08fh, 092h, 095h
