@@ -32,9 +32,13 @@ handle_tick:
 	push acc
     movc a, @a+dptr
 	mov dptr, #device
+	mov b, #10
+	div ab
     movx @dptr, a
 	pop acc
     reti
+	
+.org 1000h
 table:
 .db 07fh, 082h, 085h, 088h, 08bh, 08fh, 092h, 095h
 .db 098h, 09bh, 09eh, 0a1h, 0a4h, 0a7h, 0aah, 0adh
