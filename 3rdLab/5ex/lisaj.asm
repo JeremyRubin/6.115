@@ -1,9 +1,16 @@
 .equ deviceX, 0fe93h
 .equ deviceY, 0fe90h
 
-.equ aamount, 4
-.equ aamountp1, 5
-.equ bamount, 10
+.equ yInt
+.equ yIntOvrflw
+.equ yFractional
+.equ yPhaseShiftInt
+.equ yPhaseShiftFractional
+
+.equ xInt
+.equ xIntOvrflw
+.equ xFractional
+
 .equ timer, 04ch
 
 .org 0000h
@@ -27,27 +34,61 @@ init:
 	clr tcon ; run timer 0
 	setb TR0 ; Turn timer on
 	ret
-
+; Requires r0-3 be reserved
+; X high byte r0 X low byte r1
+; Y high byte r2 Y low byte r3
 handle_tick:
 	; Output the current values
-	push acc             ; save the a position
+	push a               ; save A (for whatever user code running)
+	
+	mov a, r0            ; recall the X a position
 	mov dptr, #table     ; put the table address in dptr
     	movc a, @a+dptr      ; get the ath value from table
 	mov dptr, #deviceX
 	movx @dptr, a
-	pop acc
-	; Increment values
-	xch a, b             ; swap a and b, increment a (b) by bamount, swap back
-	add a, #bamount
-	xch a, b
-	jnc nocarry          ; if the above generates a carry, add one to a
-		add a, #aamountp1
+	
+	mov a, r3
+	add a, #yPhaseShiftFractional
+	mov a, r2            ; recall the Y a position
+	jnc noPhaseCarry
+	inc a                ; add 1 for fractional overflow
+	noPhaseCarry:
+	add a, #yPhaseShiftInt  ; Phase shift a by Integer amt
+	
+	mov dptr, #table     ; put the table address in dptr
+    	movc a, @a+dptr      ; get the ath value from table
+	mov dptr, #deviceY
+	movx @dptr, a
+	
+	; Increment lower byte value
+	X:
+	clr c
+	mov a, r1
+	add a, #xFractional
+	mov r1, a
+	mov a, r0
+	jnc xNoCarry          ; if the above generates a carry, add one to a
+		add a, #xIntOvrflw
+		sjmp xEnd
+	xNoCarry:
+		add a, #xInt      ; add aamount to a
+	xEnd:
+		mov r0, a
+		clr c
+    	Y:
+	mov a, r3
+	add a, #yFractional
+	mov r3, a
+	mov a, r2
+	jnc yNoCarry          ; if the above generates a carry, add one to a
+		add a, #yIntOvrflw
+		sjmp yEnd
+	yNoCarry:
+		add a, #yInt      ; add aamount to a
+	yEnd:
+		mov r2, a
 		clr c
 		reti
-	nocarry:
-		add a, #aamount      ; add aamount to a
-    		clr c
-    		reti
 
 .org 1000h
 table:
