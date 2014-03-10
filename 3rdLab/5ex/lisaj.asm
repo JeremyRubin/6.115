@@ -1,6 +1,8 @@
-.equ device, 0fe94h
+.equ deviceX, 0fe93h
+.equ deviceY, 0fe90h
 
 .equ aamount, 4
+.equ aamountp1, 5
 .equ bamount, 10
 .equ timer, 04ch
 
@@ -8,43 +10,44 @@
 ljmp start
 .org 00bh
 TIMER_ISR:
-ljmp handle_tick
+	ljmp handle_tick
 .org 100h
 start:
-lcall init
-loop:
-    sjmp loop
+	lcall init
+	loop:
+    		sjmp loop
 
 init:
 	clr c
 	clr b
-    ; Keypad
 	mov IE, #82h ; Enable interrupts, enable timer 0 interrupt
 	setb P3.2 ; disable the keypad chip
 	mov tmod, #02h ; set timer 0 for auto reload - mode 2
-	mov dptr, #1000h
-	movx a, @dptr
 	mov th0, #timer
-    clr tcon ; run timer 0
+	clr tcon ; run timer 0
 	setb TR0 ; Turn timer on
-    ret
+	ret
 
 handle_tick:
-	mov dptr, #table
-	xch a, b
+	; Output the current values
+	push acc             ; save the a position
+	mov dptr, #table     ; put the table address in dptr
+    	movc a, @a+dptr      ; get the ath value from table
+	mov dptr, #deviceX
+	movx @dptr, a
+	pop acc
+	; Increment values
+	xch a, b             ; swap a and b, increment a (b) by bamount, swap back
 	add a, #bamount
 	xch a, b
-	jnc nocarry
+	jnc nocarry          ; if the above generates a carry, add one to a
+		add a, #aamountp1
 		clr c
-		add a, #1
+		reti
 	nocarry:
-	add a, #aamount
-	push acc
-    movc a, @a+dptr
-	mov dptr, #device
-    movx @dptr, a
-	pop acc
-    reti
+		add a, #aamount      ; add aamount to a
+    		clr c
+    		reti
 
 .org 1000h
 table:
