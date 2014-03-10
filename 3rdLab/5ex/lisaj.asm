@@ -1,15 +1,16 @@
-.equ deviceX, 0fe93h
-.equ deviceY, 0fe90h
+.equ deviceX, 0fe18h
+.equ deviceY, 0fe1ch
 
-.equ yInt
-.equ yIntOvrflw
-.equ yFractional
-.equ yPhaseShiftInt
-.equ yPhaseShiftFractional
+.equ yInt, 3
+.equ yIntOvrflw, 4
+.equ yFractional, 32
+.equ yPhaseShiftInt, 0
+.equ yPhaseShiftFractional, 0
+.equ xInt, 4
+.equ xIntOvrflw, 5
+.equ xFractional, 0
 
-.equ xInt
-.equ xIntOvrflw
-.equ xFractional
+.equ scale, 1
 
 .equ timer, 04ch
 
@@ -17,12 +18,12 @@
 ljmp start
 .org 00bh
 TIMER_ISR:
-	ljmp handle_tick
+ljmp handle_tick
 .org 100h
 start:
-	lcall init
-	loop:
-    		sjmp loop
+lcall init
+loop:
+     sjmp loop
 
 init:
 	clr c
@@ -33,63 +34,68 @@ init:
 	mov th0, #timer
 	clr tcon ; run timer 0
 	setb TR0 ; Turn timer on
-	ret
+	setb p3.4 ; FIRE THE LAZARS
+ret
 ; Requires r0-3 be reserved
 ; X high byte r0 X low byte r1
 ; Y high byte r2 Y low byte r3
 handle_tick:
 	; Output the current values
-	push acc		; save A (for whatever user code running)
-	
-	mov a, r0		; recall the X a position
+	push acc	; save A (for whatever user code running)
+
+	mov a, r0	; recall the X a position
 	mov dptr, #table	; put the table address in dptr
-    	movc a, @a+dpt		; get the ath value from table
+	movc a, @a+dptr	; get the ath value from table
 	mov dptr, #deviceX
+	mov b, #scale
+	div ab
 	movx @dptr, a
-	
+
 	mov a, r3
 	add a, #yPhaseShiftFractional
-	mov a, r		; recall the Y a position
+	mov a, r2	; recall the Y a position
 	jnc noPhaseCarry
-	inc 			; add 1 for fractional overflow
+	inc a; add 1 for fractional overflow
 	noPhaseCarry:
 	add a, #yPhaseShiftInt	; Phase shift a by Integer amt
-	
+
 	mov dptr, #table	; put the table address in dptr
-    	movc a, @a+dpt		; get the ath value from table
+		 movc a, @a+dptr	; get the ath value from table
 	mov dptr, #deviceY
+		mov b, #scale
+	div ab
 	movx @dptr, a
-	
+
 	; Increment lower byte value
 	X:
-	clr c
-	mov a, r1
-	add a, #xFractional
-	mov r1, a
-	mov a, r0
-	jnc xNoCarr		; if the above generates a carry, add one to a
+		clr c
+		mov a, r1
+		add a, #xFractional
+		mov r1, a
+		mov a, r0
+		jnc xNoCarry	; if the above generates a carry, add one to a
 		add a, #xIntOvrflw
 		sjmp xEnd
-	xNoCarry:
+		xNoCarry:
 		add a, #xInt	; add aamount to a
-	xEnd:
+		xEnd:
 		mov r0, a
 		clr c
-    	Y:
-	mov a, r3
-	add a, #yFractional
-	mov r3, a
-	mov a, r2
-	jnc yNoCarry		; if the above generates a carry, add one to a
+	Y:
+		mov a, r3
+		add a, #yFractional
+		mov r3, a
+		mov a, r2
+		jnc yNoCarry	; if the above generates a carry, add one to a
 		add a, #yIntOvrflw
 		sjmp yEnd
-	yNoCarry:
+		yNoCarry:
 		add a, #yInt	; add aamount to a
-	yEnd:
+		yEnd:
 		mov r2, a
 		clr c
-		pop acc		; Restore a for whatever user code was running
-		reti
+		pop acc			; Restore a for whatever user code was running
+	reti
 
 .org 1000h
 table:
