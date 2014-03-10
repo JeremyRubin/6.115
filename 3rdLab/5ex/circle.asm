@@ -1,16 +1,9 @@
 .equ deviceX, 0fe18h
 .equ deviceY, 0fe1ch
 
-.equ yInt, 3
-.equ yIntOvrflw, 4
-.equ yFractional, 32
-.equ yPhaseShiftInt, 0
-.equ yPhaseShiftFractional, 0
-.equ xInt, 4
-.equ xIntOvrflw, 5
-.equ xFractional, 0
 
-.equ scale, 1
+
+.equ scale, 2
 
 .equ timer, 04ch
 
@@ -18,9 +11,63 @@
 ljmp start
 .org 00bh
 TIMER_ISR:
-ljmp handle_tick
+ljmp nway
 .org 100h
+;===============================================================
+; subroutine nway
+; this routine branches (jumps) to the appropriate monitor
+; routine. the routine number is in r2
+;================================================================
+nway:
+   mov dptr, #jumtab ;point dptr at beginning of jump table
+   mov a, r7 ;load acc with monitor routine number
+   rl a ;multiply by two.
+   inc a ;load first vector onto stack
+   movc a, @a+dptr ; " "
+   push acc ; " "
+   mov a, r7 ;load acc with monitor routine number
+   rl a ;multiply by two
+   movc a, @a+dptr ;load second vector onto stack
+   push acc ; " "
+   ret ;jump to start of monitor routine
+
+;=================================================================
+; pattern jump table
+;=================================================================
+jumtab:
+   .dw  circle ; command '@' 00
+   .dw  circle ; command 'a' 01
+   .dw  circle ; command 'b' 02
+   .dw  circle ; command 'c' 03
+   .dw  circle ; command 'd' 04 used
+   .dw  circle ; command 'e' 05
+   .dw  circle ; command 'f' 06
+   .dw  circle ; command 'g' 07 used
+   .dw  circle ; command 'h' 08
+   .dw  circle ; command 'i' 09
+   .dw  circle ; command 'j' 0a
+   .dw  circle ; command 'k' 0b
+   .dw  circle ; command 'l' 0c
+   .dw  circle ; command 'm' 0d
+   .dw  circle ; command 'n' 0e
+   .dw  circle ; command 'o' 0f
+   .dw  circle ; command 'p' 10
+   .dw  circle ; command 'q' 11
+   .dw  circle ; command 'r' 12 used
+   .dw  circle ; command 's' 13
+   .dw  circle ; command 't' 14
+   .dw  circle ; command 'u' 15
+   .dw  circle ; command 'v' 16
+   .dw  circle ; command 'w' 17 used
+   .dw  circle ; command 'x' 18
+   .dw  circle ; command 'y' 19
+   .dw  circle ; command 'z' 1a
+
+
+
+
 start:
+mov r7, 0
 lcall init
 loop:
      sjmp loop
@@ -36,10 +83,22 @@ init:
 	setb TR0 ; Turn timer on
 	setb p3.4 ; FIRE THE LAZARS
 ret
-; Requires r0-3 be reserved
+; Requires r0-5 be reserved
 ; X high byte r0 X low byte r1
 ; Y high byte r2 Y low byte r3
-handle_tick:
+; P high byte r4 P low byte r5
+circle:
+	.equ yInt, 4
+	.equ yFractional, 0
+	.equ yPhaseShiftInt, 32
+	.equ yPhaseShiftFractional, 0
+	.equ xInt, 4
+	.equ xIntOvrflw, 5
+	.equ xFractional, 0
+	mov r4, #64; mov r4, #64
+	mov r5, #0
+draw:
+	
 	; Output the current values
 	push acc	; save A (for whatever user code running)
 
@@ -52,12 +111,9 @@ handle_tick:
 	movx @dptr, a
 
 	mov a, r3
-	add a, #yPhaseShiftFractional
+	add a, r5
 	mov a, r2	; recall the Y a position
-	jnc noPhaseCarry
-	inc a; add 1 for fractional overflow
-	noPhaseCarry:
-	add a, #yPhaseShiftInt	; Phase shift a by Integer amt
+	addc a, r4	; Phase shift a by Integer amt
 
 	mov dptr, #table	; put the table address in dptr
 		 movc a, @a+dptr	; get the ath value from table
@@ -73,11 +129,7 @@ handle_tick:
 		add a, #xFractional
 		mov r1, a
 		mov a, r0
-		jnc xNoCarry	; if the above generates a carry, add one to a
-		add a, #xIntOvrflw
-		sjmp xEnd
-		xNoCarry:
-		add a, #xInt	; add aamount to a
+		addc a, #xInt	; add aamount to a
 		xEnd:
 		mov r0, a
 		clr c
@@ -86,11 +138,7 @@ handle_tick:
 		add a, #yFractional
 		mov r3, a
 		mov a, r2
-		jnc yNoCarry	; if the above generates a carry, add one to a
-		add a, #yIntOvrflw
-		sjmp yEnd
-		yNoCarry:
-		add a, #yInt	; add aamount to a
+		addc a, #yInt	; add aamount to a
 		yEnd:
 		mov r2, a
 		clr c
