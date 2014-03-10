@@ -39,24 +39,24 @@ init:
 ; Y high byte r2 Y low byte r3
 handle_tick:
 	; Output the current values
-	push a               ; save A (for whatever user code running)
+	push acc		; save A (for whatever user code running)
 	
-	mov a, r0            ; recall the X a position
-	mov dptr, #table     ; put the table address in dptr
-    	movc a, @a+dptr      ; get the ath value from table
+	mov a, r0		; recall the X a position
+	mov dptr, #table	; put the table address in dptr
+    	movc a, @a+dpt		; get the ath value from table
 	mov dptr, #deviceX
 	movx @dptr, a
 	
 	mov a, r3
 	add a, #yPhaseShiftFractional
-	mov a, r2            ; recall the Y a position
+	mov a, r		; recall the Y a position
 	jnc noPhaseCarry
-	inc a                ; add 1 for fractional overflow
+	inc 			; add 1 for fractional overflow
 	noPhaseCarry:
-	add a, #yPhaseShiftInt  ; Phase shift a by Integer amt
+	add a, #yPhaseShiftInt	; Phase shift a by Integer amt
 	
-	mov dptr, #table     ; put the table address in dptr
-    	movc a, @a+dptr      ; get the ath value from table
+	mov dptr, #table	; put the table address in dptr
+    	movc a, @a+dpt		; get the ath value from table
 	mov dptr, #deviceY
 	movx @dptr, a
 	
@@ -67,11 +67,11 @@ handle_tick:
 	add a, #xFractional
 	mov r1, a
 	mov a, r0
-	jnc xNoCarry          ; if the above generates a carry, add one to a
+	jnc xNoCarr		; if the above generates a carry, add one to a
 		add a, #xIntOvrflw
 		sjmp xEnd
 	xNoCarry:
-		add a, #xInt      ; add aamount to a
+		add a, #xInt	; add aamount to a
 	xEnd:
 		mov r0, a
 		clr c
@@ -80,14 +80,15 @@ handle_tick:
 	add a, #yFractional
 	mov r3, a
 	mov a, r2
-	jnc yNoCarry          ; if the above generates a carry, add one to a
+	jnc yNoCarry		; if the above generates a carry, add one to a
 		add a, #yIntOvrflw
 		sjmp yEnd
 	yNoCarry:
-		add a, #yInt      ; add aamount to a
+		add a, #yInt	; add aamount to a
 	yEnd:
 		mov r2, a
 		clr c
+		pop acc		; Restore a for whatever user code was running
 		reti
 
 .org 1000h
