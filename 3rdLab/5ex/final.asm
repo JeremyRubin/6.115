@@ -1,10 +1,9 @@
-.equ deviceY, 0fe18h
-.equ deviceX, 0fe1ch
-
-
-
+;depending on kit, change these
+.equ deviceX, 0fe18h
+.equ deviceY, 0fe1ch
+; Divide all by two
 .equ scale, 2
-
+; timer 180 cycles
 .equ timer, 04ch
 
 .org 0000h
@@ -12,90 +11,96 @@ ljmp start
 
 .org 00bh
 TIMER_ISR:
-lcall draw
-reti
-.org 30h
-	.equ yInt, 30h
-	.equ yFractional, 31h
-	.equ xInt, 32h
-	.equ xFractional, 33h
-	.equ phiInt, 34h
-	.equ phiFractional, 35h
-	.equ xPosH, 36h
-	.equ xPosL, 37h
-	.equ yPosH, 38h
-	.equ yPosL, 39h
-	.equ phiPosH, 3Ah
-	.equ phiPosL, 3Bh
+ljmp draw
 
+.org 30h
+; Reserve some values in this space for laserdillo config
+.equ yInt, 30h
+.equ yFractional, 31h
+.equ xInt, 32h
+.equ xFractional, 33h
+.equ phiInt, 34h
+.equ phiFractional, 35h
+.equ xPosH, 36h
+.equ xPosL, 37h
+.equ yPosH, 38h
+.equ yPosL, 39h
+.equ phiPosH, 3Ah
+.equ phiPosL, 3Bh
+.equ laserFractional, 3Ch
+.equ laserPosL, 3Dh
+.org 40h
 
 .org 100h
-
-
-
 start:
-mov r7, 0
 lcall init
+lcall circle ; start on circle
 loop:
-  clr P3.2 ; enable the encoder chip
-  setb p3.3 ; enable 3.3 as input
-  mov p1, #0ffh ; enable port 1 as input
-  nodata:
-  jnb P3.3, nodata ; proceed if data avail
+	; Always reset the keypad in case it is being weird
+    clr P3.2 ; enable the encoder chip
+    setb p3.3 ; enable 3.3 as input
+    mov p1, #0ffh ; enable port 1 as input
+    nodata:
+    jnb P3.3, nodata ; proceed if data avail
 
-  mov a, P1 ; read p1
-  lcall bin
-  lcall nway
-	    wait: ; wait for the data to clear
-    jb p3.3, wait
-  sjmp loop ; repeat
-  
-  ; If we ever get amulet working....
-		mov dptr, #0FE15h
-		movx a, @dptr
-		anl a, #01h
-		jz loop
-		
-		mov dptr, #0fe10h
-		movx a, @dptr
-		mov p1, a
-     sjmp loop
+    mov a, P1 ; read p1
+    lcall bin ; conver to a number 0-15
+    ljmp nway; jump to the nway, then it will jump back
+    wait: ; wait for the data to clear
+        jb p3.3, wait
+    sjmp loop ; repeat
 bin:
     anl a, #0Fh ; Mask off the upper nibble
     inc a ; increment so that we go past the ret opcode
     movc a, @a+pc ; PC has the ret below, so we go a+pc -> a to pull from table
-   ret
+    ret
     .db 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
-	
-init:
-		mov dptr, #0fe13h
-		mov a, #083h
-		movx @dptr, a
-		
-		mov a, #20
-		mov dptr, #0fe10h
-		movx @dptr, a
-		
-		mov a, #00
-		mov dptr, #0fe11h
-		movx @dptr, a
-		
-		mov dptr, #0fe13h
-		mov a, #07h
-		movx @dptr, a
-		
-		mov a, #00h
-		mov dptr, #0FE01h
-		movx @dptr, a
 
-	clr c
-	clr b
-	mov IE, #82h ; Enable interrupts, enable timer 0 interrupt
-	mov tmod, #02h ; set timer 0 for auto reload - mode 2
-	mov th0, #timer
-	clr tcon ; run timer 0
-	setb TR0 ; Turn timer on
-ret
+
+   ; If we ever get amulet working, this unreachable code should do it!
+   ; mov dptr, #0FE15h
+   ; movx a, @dptr
+   ; anl a, #01h
+   ; jz loop
+
+   ; mov dptr, #0fe10h
+   ; movx a, @dptr
+   ; mov p1, a
+   ; sjmp loop
+
+
+init:
+    clr c
+    clr b
+    mov IE, #82h ; Enable interrupts, enable timer 0 interrupt
+    mov tmod, #02h ; set timer 0 for auto reload - mode 2
+    mov th0, #timer
+    clr tcon ; run timer 0
+    setb TR0 ; Turn timer on
+    ret
+; INCLUDE THIS FOR AMULET FUNCTION
+;mov dptr, #0fe13h
+;mov a, #083h
+;movx @dptr, a
+
+;mov a, #20
+;mov dptr, #0fe10h
+;movx @dptr, a
+
+;mov a, #00
+;mov dptr, #0fe11h
+;movx @dptr, a
+
+;mov dptr, #0fe13h
+;mov a, #07h
+;movx @dptr, a
+
+;mov a, #00h
+;mov dptr, #0FE01h
+;movx @dptr, a
+
+
+
 ;===============================================================
 ; subroutine nway
 ; this routine branches (jumps) to the appropriate monitor
@@ -117,150 +122,186 @@ nway:
 ; pattern jump table
 ;=================================================================
 jumtab:
-   .dw  tie; command '@' 00
-   .dw  circle ; command 'a' 01
-   .dw  a1b4 ; command 'b' 02
-   .dw  incPhi ; command 'c' 03
-   .dw  circle ; command 'd' 04 used
-   .dw  circle ; command 'e' 05
-   .dw  circle ; command 'f' 06
-   .dw  decPhi ; command 'g' 07 used
-   .dw  circle ; command 'h' 08
-   .dw  circle ; command 'i' 09
-   .dw  circle ; command 'j' 0a
-   .dw  circle ; command 'k' 0b
-   .dw  circle ; command 'l' 0c
-   .dw  circle ; command 'm' 0d
-   .dw  circle ; command 'n' 0e
-   .dw  circle ; command 'o' 0f
-   .dw  circle ; command 'p' 10
-   .dw  circle ; command 'q' 11
-   .dw  circle ; command 'r' 12 used
-   .dw  circle ; command 's' 13
-   .dw  circle ; command 't' 14
-   .dw  circle ; command 'u' 15
-   .dw  circle ; command 'v' 16
-   .dw  circle ; command 'w' 17 used
-   .dw  circle ; command 'x' 18
-   .dw  circle ; command 'y' 19
-   .dw  circle ; command 'z' 1a
+   .dw tie; command '@' 00
+   .dw circle ; command 'a' 01
+   .dw a1b4 ; command 'b' 02
+   .dw incPhi ; command 'c' 03
+   .dw incX ; command 'd' 04 used
+   .dw incY ; command 'e' 05
+   .dw circle ; command 'f' 06
+   .dw decPhi ; command 'g' 07 used
+   .dw decX ; command 'h' 08
+   .dw decY ; command 'i' 09
+   .dw circle ; command 'j' 0a
+   .dw circle ; command 'k' 0b
+   .dw laserdown ; command 'l' 0c
+   .dw laserup ; command 'm' 0d
+   .dw laserOff ; command 'n' 0e
+   .dw laserReset ; command 'o' 0f
+laserup:
+    inc  laserFractional
+    inc laserFractional
+    inc  laserFractional
+    ljmp wait
+laserdown:
+    dec  laserFractional
+    dec laserFractional
+    dec  laserFractional
+    ljmp wait
+laserOff:
+	mov laserFractional, #0
+    clr p3.4
+	ljmp wait
+laserReset:
+	mov laserFractional, #0
+    setb p3.4
+	ljmp wait
+incX:
+    inc xFractional
+    inc xFractional
+    inc xFractional
+    ljmp wait
 
+incY:
+    inc yFractional
+    inc yFractional
+    inc yFractional
+    ljmp wait
+decX:
+    dec xFractional
+    dec xFractional
+    dec xFractional
+    ljmp wait
+
+decY:
+    dec yFractional
+    dec yFractional
+    dec yFractional
+    ljmp wait
 
 incPhi:
-	inc phiFractional
-		inc phiFractional
-
-	inc phiFractional
-
-	ljmp wait
+    inc phiFractional
+    inc phiFractional
+    inc phiFractional
+    ljmp wait
 decPhi:
-	dec PhiFractional
-
-	dec PhiFractional
-
-	dec PhiFractional
-	ljmp wait
+    dec PhiFractional
+    dec PhiFractional
+    dec PhiFractional
+    ljmp wait
 circle:
-	mov yPosH, #0h
-	mov yPosL, #0h
-	mov xPosH, #0h
-	mov xPosL, #0h
-	mov yInt, #4
-	mov yFractional, #0
-	mov xInt, #4
-	mov xFractional, #0
-	mov phiInt, #0
-	mov phiFractional, #00h
-	mov phiPosH, #64
-	mov phiPosL, #0
-	ljmp wait
+    mov yPosH, #0h
+    mov yPosL, #0h
+    mov xPosH, #0h
+    mov xPosL, #0h
+    mov yInt, #4
+    mov yFractional, #0
+    mov xInt, #4
+    mov xFractional, #0
+    mov phiInt, #0
+    mov phiFractional, #00h
+    mov phiPosH, #64
+    mov phiPosL, #0
+    ljmp wait
 tie:
-	mov yPosH, #0h
-	mov yPosL, #0h
-	mov xPosH, #0h
-	mov xPosL, #0h
-	mov yInt, #3
-	mov yFractional, #00h
-	mov xInt, #1
-	mov xFractional,#0
-	mov phiInt, #00h
-	mov phiFractional, #00h
-	mov phiPosH, #64
-	mov phiPosL, #0
-	ljmp wait
+    mov yPosH, #0h
+    mov yPosL, #0h
+    mov xPosH, #0h
+    mov xPosL, #0h
+    mov yInt, #3
+    mov yFractional, #00h
+    mov xInt, #1
+    mov xFractional,#0
+    mov phiInt, #00h
+    mov phiFractional, #00h
+    mov phiPosH, #64
+    mov phiPosL, #0
+    ljmp wait
 a1b4:
-	mov yPosH, #0h
-	mov yPosL, #0h
-	mov xPosH, #0h
-	mov xPosL, #0h
-	mov yInt, #01
-	mov yFractional, #0h
-	mov xInt, #4
-	mov xFractional, #0
-	mov phiInt, #0
-	mov phiFractional, #00h
-	mov phiPosH, #0
-	mov phiPosL, #0
-	ljmp wait
+    mov yPosH, #0h
+    mov yPosL, #0h
+    mov xPosH, #0h
+    mov xPosL, #0h
+    mov yInt, #01
+    mov yFractional, #0h
+    mov xInt, #4
+    mov xFractional, #0
+    mov phiInt, #0
+    mov phiFractional, #00h
+    mov phiPosH, #0
+    mov phiPosL, #0
+    ljmp wait
 draw:
-	
-	; Output the current values
-	push acc	; save A (for whatever user code running)
-	push dpl
-	push dph
-	push b
-	xch a, phiPosL
-	add a, phiFractional
-	xch a, phiPosL
-	
-	xch a, phiPosH
-	addc a, phiInt
-	xch a, phiPosH
-	
 
-	mov a, xPosH	; recall the X a position
-	mov dptr, #table	; put the table address in dptr
-	movc a, @a+dptr	; get the ath value from table
-	mov dptr, #deviceX
-	mov b, #scale
-	div ab
-	movx @dptr, a
-
-	mov a, yPosL
-	subb a, phiPosL ; set the carry if overflows base bit
+    ; Output the current values
+    push acc	; save A (for whatever user code running)
+    push dpl
+    push dph
+    push b
 	
-	mov a, yPosH	; recall the Y a position
-	subb a, phiPosH	; Phase shift a by Integer amt + carry
+	; handle the laser switching
+	xch a, laserPosL
+    add a, laserFractional
+    xch a, laserPosL
+	jnc nolaserflip
+	clr c
+	cpl p3.4
+	nolaserflip:
+	
+	; Handle the Phi
+    xch a, phiPosL
+    add a, phiFractional
+    xch a, phiPosL
 
-	mov dptr, #table	; put the table address in dptr
-	movc a, @a+dptr	; get the ath value from table
-	mov dptr, #deviceY
-	mov b, #scale
-	div ab
-	movx @dptr, a
+    xch a, phiPosH
+    addc a, phiInt
+    xch a, phiPosH
 
-	; Increment lower byte value
-	X:
-		clr c
-		xch a, xPosL
-		add a, xFractional
-		xch a, xPosL
-		xch a, xPosH
-		addc a, xInt	; add aamount to a
-		xch a, xPosH
-	Y:
-		xch a, yPosL
-		add a, yFractional
-		xch a, yPosL
-		
-		xch a, yPosH
-		addc a, yInt	; add aamount to a
-		xch a, yPosH
-		pop b
-		pop dph
-		pop dpl
-		pop acc			; Restore a for whatever user code was running
-	ret
+	; Handle the X axis
+    mov a, xPosH	; recall the X a position
+    mov dptr, #table	; put the table address in dptr
+    movc a, @a+dptr	; get the ath value from table
+    mov dptr, #deviceX
+    mov b, #scale
+    div ab
+    movx @dptr, a
+
+	; Handle the y Axis
+    mov a, yPosL
+    subb a, phiPosL ; set the carry if overflows base bit
+
+    mov a, yPosH	; recall the Y a position
+    subb a, phiPosH	; Phase shift a by Integer amt + carry
+
+    mov dptr, #table	; put the table address in dptr
+    movc a, @a+dptr	; get the ath value from table
+    mov dptr, #deviceY
+    mov b, #scale
+    div ab
+    movx @dptr, a
+
+    ; Increment the X and Y positions
+    X:
+        clr c
+        xch a, xPosL
+        add a, xFractional
+        xch a, xPosL
+        xch a, xPosH
+        addc a, xInt
+        xch a, xPosH
+    Y:
+        xch a, yPosL
+        add a, yFractional
+        xch a, yPosL
+
+        xch a, yPosH
+        addc a, yInt
+        xch a, yPosH
+    pop b
+    pop dph
+    pop dpl
+    pop acc	; Restore a for whatever user code was running
+    reti
 
 .org 1000h
 table:
@@ -297,3 +338,7 @@ table:
 .db 04eh, 051h, 054h, 057h, 05ah, 05dh, 060h, 063h
 .db 066h, 069h, 06ch, 06fh, 073h, 076h, 079h, 07ch
 
+
+
+
+   
