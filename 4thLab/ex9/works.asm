@@ -28,7 +28,7 @@ scanLights:
         mov a, scanCount
         movx @dptr, a
         
-        mov r6, #0f0h
+        mov r6, #010h
         mov r7, #0h
         scanWait:
         djnz r7, scanWait
@@ -84,6 +84,10 @@ getADC:
 
     ret
 printoddtable:
+; Wait for space
+;lcall getchr
+;cjne a, #32, printoddtable
+
 mov dptr, #starttab
 mov r7, #24
 outerloop:
@@ -114,6 +118,12 @@ timer_0_ISR:
     reti
 	
     nokill:
+		mov dptr, #starttab
+	xch a, dph
+	add a, r3
+	xch a, dph
+    lcall scanLights
+	
     mov r2, #15
     mov dptr, #0fe09h
     mov a, r1
@@ -122,11 +132,7 @@ timer_0_ISR:
     mov p1, a
     movx @dptr, a
 	
-	mov dptr, #starttab
-	xch a, dph
-	add a, r3
-	xch a, dph
-    lcall scanLights
+
     noflip:
     reti
     
@@ -149,6 +155,12 @@ mov a, #80h
 mov r3, #26
 
 movx @dptr, a
+
+; Make sure stepper is primed
+mov dptr, #0fe09h
+    mov a, r1
+    mov p1, a
+    movx @dptr, a
 
 
 setb TR1
