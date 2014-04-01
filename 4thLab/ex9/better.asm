@@ -12,6 +12,8 @@ ljmp timer_0_ISR
 ; Begin Main Block
 start:
 lcall init
+lcall getchr
+setb tr0
 loop:
 sjmp loop
 
@@ -95,12 +97,28 @@ getADC:
     pop dph
     pop dpl
     ret
+printoddtable:
+	mov dptr, #starttab
+	mov r7, #24
+	outerloop:
+		inc dph
+		mov dpl, #0
+		mov r6, #16
+		innerloop:
+			inc dpl
+			movx a, @dptr
+			lcall prthex
+		djnz r6, innerloop
+	djnz r7, outerloop
+ret
+
 
 timer_0_ISR:
     djnz r0, noflip
     djnz r2, noflip
     djnz r3, nokill
-    clr ea
+    clr tr0
+    lcall printoddtable
     reti
     nokill:
     mov r2, #15
@@ -118,10 +136,13 @@ init:
 ; Keypad
 mov IE, #82h ; Enable interrupts, enable timer 0 interrupt
 setb P3.2 ; disable the keypad chip
-mov tmod, #02h ; set timer 0 for auto reload - mode 2
+mov tmod, #22h ; set timer 0 for auto reload - mode 2
 mov r1, #0EEh
 mov th0, #00h
-    clr tcon ; run timer 0
+mov th1, #253
+clr tcon ; run timer 0
+
+mov scon, #54h  ; set serial control reg for
 
 mov r1, #00h
 mov r0, #0h
@@ -135,7 +156,69 @@ movx @dptr, a
 
 
 
-
+setb TR1
 setb TR0 ; Turn timer on
     ret
+;*****************************************************************
+; general purpose routines
+;*****************************************************************
+;===============================================================
+; subroutine sndchr
+; this routine takes the chr in the acc and sends it out the
+; serial port.
+;===============================================================
+sndchr:
+   clr scon.1 ; clear the tx buffer full flag.
+   mov sbuf,a ; put chr in sbuf
+txloop:
+   jnb scon.1, txloop ; wait till chr is sent
+   ret
+;===============================================================
+; subroutine getchr
+; this routine reads in a chr from the serial port and saves it
+; in the accumulator.
+;===============================================================
+getchr:
+   jnb ri, getchr ; wait till character received
+   mov a, sbuf ; get character
+   anl a, #7fh ; mask off 8th bit
+   clr ri ; clear serial status bit
+   ret
+;===============================================================
+; subroutine prthex
+; this routine takes the contents of the acc and prints it out
+; as a 2 digit ascii hex number.
+;===============================================================
+prthex:
+   push acc
+   lcall binasc ; convert acc to ascii
+   lcall sndchr ; print first ascii hex digit
+   mov a, r2 ; get second ascii hex digit
+   lcall sndchr ; print it
+   pop acc
+   ret
+;===============================================================
+; subroutine binasc
+; binasc takes the contents of the accumulator and converts it
+; into two ascii hex numbers. the result is returned in the
+; accumulator and r2.
+;===============================================================
+binasc:
+   mov r2, a ; save in r2
+   anl a, #0fh ; convert least sig digit.
+   add a, #0f6h ; adjust it
+   jnc noadj1 ; if a-f then readjust
+   add a, #07h
+noadj1:
+   add a, #3ah ; make ascii
+   xch a, r2 ; put result in reg 2
+   swap a ; convert most sig digit
+   anl a, #0fh ; look at least sig half of acc
+   add a, #0f6h ; adjust it
+   jnc noadj2 ; if a-f then re-adjust
+   add a, #07h
+noadj2:
+   add a, #3ah ; make ascii
+   ret
+
 
