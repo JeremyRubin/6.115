@@ -103,13 +103,14 @@ timer1enable:
 	mov th1state, a
 	mov nextth1state, r4
 	clr c
-	; turn on the timer
+	; raise priority
 	setb pt1
 	ret
 
 ; #####################
 ; # Arm control funcs #
 ; #####################
+
 
 
 	elbow:
@@ -209,6 +210,39 @@ timer_0_ISR:
 	setb EA
 	pop acc
 reti
+	shoulder:
+		mov a, #0ffh
+		clr c
+		add a, r6
+		mov a, #00000001b
+		jc shoulderNorm
+		rl a
+		shoulderNorm:
+		mov portBstate, a
+		mov portCstate, #00h
+
+			lcall timer1enable
+
+		shoulderWait:
+		jnb p1.2, shoulderWait
+		sjmp clrports
+
+	base:
+		mov a, #0ffh
+		clr c
+		add a, r6
+		mov a, #00000100b
+		jc baseNorm
+		rl a
+		baseNorm:
+		mov portBstate, a
+		mov portCstate, #00h
+
+		lcall timer1enable
+
+		baseWait:
+		jnb p1.4, baseWait
+		sjmp clrports
 
 ; Use Timer 1 for pwm
 timer_1_ISR:
@@ -226,6 +260,7 @@ timer_1_ISR:
 	xch a, th1state
 	xch a, nextth1state
 	xch a, th1state
+	
 	mov th1, th1state
 	
 	; push the values out to the port!
