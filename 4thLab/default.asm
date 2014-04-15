@@ -1,3 +1,4 @@
+; An effort to collect the things I use often
 #Peripheral Base Addrs
 .equ perph0, 0fe00h
 .equ perph1, 0fe08h
