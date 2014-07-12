@@ -1,6 +1,4 @@
 6.115
 =====
 
-6.115 labs
-
-Place all labs in here
+6.115 lab assignments from Spring 2014. 
